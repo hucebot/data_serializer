@@ -1,10 +1,10 @@
 
 #include <unordered_map>
-#include <data_serializer.hpp>
+#include <data_serializer/data_serializer.hpp>
 
 
 int main() {
-    {
+    
     std::unordered_map<std::string, Eigen::VectorXd> data;
 
     data["imu"] = Eigen::VectorXd::Ones(3);
@@ -16,10 +16,10 @@ int main() {
     writer.write(data);
     writer.write(data);
     writer.flush();
-    }
-    {
+    
     data_serializer::Reader<> reader("test.dat");
-    auto data = reader.read_all();
+    auto data_read = reader.read_all();
     reader.write_csv("test.csv");
-    }
+
+    return 0;
 }
