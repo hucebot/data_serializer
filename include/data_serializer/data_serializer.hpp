@@ -66,7 +66,7 @@ namespace data_serializer {
         }
         const std::vector<data_t>& data() const { return _data; }
         const std::vector<std::string>& names() const { return _names; }
-        const std::vector<std::string>& n_elems() const { return _n_elems; }
+        const std::vector<size_t>& n_elems() const { return _n_elems; }
 
         void write_csv(const std::string& fname, bool write_header = true, char delim = ';')
         {
