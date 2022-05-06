@@ -48,3 +48,6 @@ install(FILES
         DESTINATION lib/cmake/data_serializer
 )
 
+add_subdirectory(src)
+
+

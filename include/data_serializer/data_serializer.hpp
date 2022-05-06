@@ -1,3 +1,4 @@
+#include <exception>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -12,7 +13,11 @@ namespace data_serializer {
     class Writer {
     public:
         using data_t = Map;
-        Writer(const std::string& filename) : _ofs(filename.c_str()) {}
+        Writer(const std::string& filename) : _ofs(filename.c_str())
+        {
+            if (!_ofs.good())
+                throw std::runtime_error(std::string("Error when opening file ") + filename);
+        }
         void write(const data_t& data)
         {
             if (!_header_written)
@@ -46,43 +51,32 @@ namespace data_serializer {
     class Reader {
     public:
         using data_t = Map;
-        Reader(const std::string& filename) : _ifs(filename.c_str()) {}
+        // vector of map
+        std::vector<data_t> data;
+        // number of items for each field
+        std::vector<size_t> n_items;
+        // name of each field
+        std::vector<std::string> names;
 
-        const std::vector<data_t>& read_all()
-        {
-            _read_header();
-            while (true) {
-                data_t d;
-                for (size_t i = 0; i < _n_elems.size(); ++i) {
-                    Eigen::VectorXd v(_n_elems[i]);
-                    _ifs.read((char*)v.data(), sizeof(double) * _n_elems[i]);
-                    if (_ifs.eof())
-                        return _data;
-                    d[_names[i]] = v;
-                }
-                _data.push_back(d);
-            }
-            return _data;
-        }
-        const std::vector<data_t>& data() const { return _data; }
-        const std::vector<std::string>& names() const { return _names; }
-        const std::vector<size_t>& n_elems() const { return _n_elems; }
+        // parse a .dat file
+        Reader(const std::string& filename) { _read_all(filename); }
 
-        void write_csv(const std::string& fname, bool write_header = true, char delim = ';')
+        void write_csv(const std::string& fname, bool write_header = true, char delim = ';') const
         {
-            if (_names.empty())
-                read_all(); // because of this, this write_csv cannot be const!
             std::ofstream ofs(fname.c_str());
+            if (!ofs.good())
+                throw std::runtime_error(std::string("Error when opening file ") + fname);
+
             // header
-            for (size_t i = 0; i < _names.size(); ++i)
-                for (size_t j = 0; j < _n_elems[i]; ++j) {
-                    ofs << _names[i] + "_" + std::to_string(j);
+            for (size_t i = 0; i < names.size(); ++i)
+                for (size_t j = 0; j < n_items[i]; ++j) {
+                    ofs << names[i] + "_" + std::to_string(j);
                     ofs << delim;
                 }
             ofs << std::endl;
 
             // data
-            for (auto& row : _data) {
+            for (auto& row : data) {
                 for (auto& col : row)
                     for (size_t i = 0; i < col.second.size(); ++i)
                         ofs << col.second[i] << delim;
@@ -91,29 +85,42 @@ namespace data_serializer {
         }
 
     protected:
-        std::ifstream _ifs;
-        std::vector<size_t> _n_elems;
-        std::vector<std::string> _names;
-        std::vector<data_t> _data;
-
-        void _read_header()
+        void _read_all(const std::string& filename)
         {
-            size_t n_columns = read_size_t();
-            _n_elems.resize(n_columns);
-            _names.resize(n_columns);
-            for (size_t i = 0; i < n_columns; ++i) {
-                _n_elems[i] = read_size_t();
-                size_t n = read_size_t();
-                char s[n + 1];
-                s[n] = 0;
-                _ifs.read(s, n);
-                _names[i] = std::string(s);
+            std::ifstream ifs(filename.c_str());
+            if (!ifs.good())
+                throw std::runtime_error(std::string("Error when opening file ") + filename);
+            _read_header(ifs);
+            while (true) {
+                data_t d;
+                for (size_t i = 0; i < n_items.size(); ++i) {
+                    Eigen::VectorXd v(n_items[i]);
+                    ifs.read((char*)v.data(), sizeof(double) * n_items[i]);
+                    if (ifs.eof())
+                        return;
+                    d[names[i]] = v;
+                }
+                data.push_back(d);
             }
         }
-        size_t read_size_t()
+        void _read_header(std::ifstream& ifs)
+        {
+            size_t n_columns = read_size_t(ifs);
+            n_items.resize(n_columns);
+            names.resize(n_columns);
+            for (size_t i = 0; i < n_columns; ++i) {
+                n_items[i] = read_size_t(ifs);
+                size_t n = read_size_t(ifs);
+                char s[n + 1];
+                s[n] = 0;
+                ifs.read(s, n);
+                names[i] = std::string(s);
+            }
+        }
+        size_t read_size_t(std::ifstream& ifs)
         {
             size_t n;
-            _ifs.read((char*)&n, sizeof(size_t));
+            ifs.read((char*)&n, sizeof(size_t));
             return n;
         }
     };
