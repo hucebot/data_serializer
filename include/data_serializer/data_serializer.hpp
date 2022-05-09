@@ -44,7 +44,7 @@ namespace data_serializer {
             _ofs.write((char*)&x, sizeof(size_t));
         }
         std::ofstream _ofs;
-        bool _header_written;
+        bool _header_written = false;
     };
 
     template <typename Map = std::unordered_map<std::string, Eigen::VectorXd>>
