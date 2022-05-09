@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <map>
 #include <unordered_map>
 #include <vector>
 
@@ -9,7 +10,7 @@
 
 namespace data_serializer {
 
-    template <typename Map = std::unordered_map<std::string, Eigen::VectorXd>>
+    template <typename Map = std::map<std::string, Eigen::VectorXd>>
     class Writer {
     public:
         using data_t = Map;
@@ -47,7 +48,7 @@ namespace data_serializer {
         bool _header_written = false;
     };
 
-    template <typename Map = std::unordered_map<std::string, Eigen::VectorXd>>
+    template <typename Map = std::map<std::string, Eigen::VectorXd>>
     class Reader {
     public:
         using data_t = Map;
