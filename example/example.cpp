@@ -4,7 +4,7 @@
 
 int main() {
     
-    std::unordered_map<std::string, Eigen::VectorXd> data;
+    std::map<std::string, Eigen::VectorXd> data;
 
     data["imu"] = Eigen::VectorXd::Ones(3);
     data["ft"] = Eigen::VectorXd::Zero(6);
