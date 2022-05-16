@@ -1,3 +1,5 @@
+#ifndef IWBC_DATA_SERIALIZER_HPP_
+#define IWBC_DATA_SERIALIZER_HPP_
 #include <exception>
 #include <fstream>
 #include <iostream>
@@ -127,3 +129,4 @@ namespace data_serializer {
     };
 
 } // namespace data_serializer
+#endif
